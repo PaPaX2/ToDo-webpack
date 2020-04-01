@@ -6,7 +6,7 @@ class App extends React.Component {
   
   state = {
     task: '',
-    taskName: 
+    tasks: 
       [
         {id: '', name: ''}
       ],
@@ -16,14 +16,14 @@ class App extends React.Component {
     this.socket = io("http://localhost:8000");
     this.socket.on('addTask', newTask => this.addTask(newTask));
     this.socket.on('removeTask', (id, source) => this.removeTask(id, source));
-    this.socket.on('updateDate', serverState => this.setState({taskName: serverState}));
+    this.socket.on('updateDate', serverState => this.setState({tasks: serverState}));
   }
 
   render() {
 
     this.removeTask = (id, local) => {
-      this.state.taskName.splice(this.state.taskName.findIndex(name => name.id === id), 1);
-      this.setState({taskName: this.state.taskName});
+      this.state.tasks.splice(this.state.tasks.findIndex(name => name.id === id), 1);
+      this.setState({tasks: this.state.tasks});
       if (local === 'local') {
       this.socket.emit('removeTask', id);
       }
@@ -31,19 +31,18 @@ class App extends React.Component {
     
     this.submitForm = (e) =>{
       e.preventDefault()
-      this.addTask(this.state.task);
-      this.socket.emit('addTask', this.state.task);
+      const newTask = {
+        id: uuidv4(),
+        name: this.state.task
+      }
+      this.addTask(newTask);
+      this.socket.emit('addTask', newTask);
       this.setState({task: ''});
     }
 
     this.addTask = (newTask) => {
-      this.state.taskName.push({
-        id: uuidv4(),
-        name: newTask
-      });
-      this.setState({taskName: this.state.taskName})
-      console.log(this.state.taskName);
-
+      this.setState({ tasks: [...this.state.tasks, newTask ]})
+      console.log(this.state.tasks);
     }
 
     return (
@@ -57,7 +56,7 @@ class App extends React.Component {
           <h2>Tasks</h2>
     
           <ul className="tasks-section__list" id="tasks-list">
-            {this.state.taskName.map((row) => (
+            {this.state.tasks.map((row) => (
               <li key={row.id} className="task">{row.name}
                 <button 
                 className="btn btn--red"
